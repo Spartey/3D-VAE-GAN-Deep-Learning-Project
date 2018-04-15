@@ -41,10 +41,10 @@ class getBatch(object):
     def get_batch(self, batch_size):
         if self.current_point + batch_size > len(self.image_lst):
             self.current_point = len(self.image_lst) - batch_size
-        xs = np.stack([self.image_array[i] for i in range(self.current_point, self.current_point + batch_size)], axis=0)
-        ys = np.stack([self.model_array[self.fig_map[i]] for i in
+        x_image = np.stack([self.image_array[i] for i in range(self.current_point, self.current_point + batch_size)], axis=0)
+        x_3d = np.stack([self.model_array[self.fig_map[i]] for i in
                              range(self.current_point, self.current_point + batch_size)], axis=0)
-        return xs, ys
+        return x_image, x_3d
 
 
 
