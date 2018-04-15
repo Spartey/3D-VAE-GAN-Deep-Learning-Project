@@ -5,7 +5,7 @@ import downSampling
 import binvox_rw
 
 
-class getBatch(object):
+class getData(object):
     def __init__(self, image_path, model_path):
         self.current_point = 0
         self.image_lst = []
@@ -31,12 +31,12 @@ class getBatch(object):
 
     def read_image(self, path):
         im = imageio.imread(path)
-        return downSampling.downsample(im, 8)
+        return ((np.reshape(downSampling.downsample(im, 8), (64, 64, 1)) / 255.0) - 0.5) / 0.5 # normalize -1 ~ 1
 
     def read_3D(self, path):
         with open(path, 'rb') as f:
             m1 = binvox_rw.read_as_3d_array(f)
-        return downSampling.downsample_cube(m1.data, 4)
+        return (np.reshape(downSampling.downsample_cube(m1.data, 4), (32, 32, 32, 1)) - 0.5) / 0.5 # normalize -1 ~ 1
 
     def get_batch(self, batch_size):
         if self.current_point + batch_size > len(self.image_lst):
@@ -47,8 +47,10 @@ class getBatch(object):
         return x_image, x_3d
 
 
-
-
-
-
-
+# if __name__ == '__main__':
+#     image_path = "./grey-office-chair-image/"
+#     model_path = "./office-chair-model/"
+#     dataset = getTrain(image_path, model_path)
+#     xs, ys = dataset.get_batch(10)
+#     print(np.shape(xs))
+#     print(np.shape(ys))
