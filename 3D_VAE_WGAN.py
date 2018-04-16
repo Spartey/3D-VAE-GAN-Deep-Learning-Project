@@ -8,7 +8,8 @@ import getTrain
 import matplotlib.pyplot as plt
 
 batch_size = 100
-lr = 5e-5
+D_lr = 5e-5
+G_lr = 1e-4
 train_epoch = 20
 n_latent = 8
 alpha_1 = 5
@@ -20,7 +21,7 @@ def lrelu(x, th=0.2):
 
 
 def encoder(x, keep_prob=0.5, isTrain=True):
-    with tf.variable_scope("encoder", reuse=tf.AUTO_REUSE):  # 64 * 64
+    with tf.variable_scope("encoder", reuse=tf.AUTO_REUSE):  # 64 * 64 * 4
         conv1 = tf.layers.conv2d(x, 128, [4, 4], strides=(2, 2), padding='same')  # 32 * 32 * 128
         lrelu1 = tf.nn.elu(conv1)
 
@@ -119,6 +120,7 @@ mean_recon = tf.reduce_sum(reconstruction_loss)
 
 VAE_loss = tf.reduce_mean(alpha_1 * KL_divergence + alpha_2 * reconstruction_loss)
 
+
 D_loss_real = tf.reduce_mean(D_real_logits)
 D_loss_fake = tf.reduce_mean(D_fake_logits)
 D_loss = D_loss_real - D_loss_fake
@@ -134,14 +136,16 @@ D_vars = [var for var in T_vars if var.name.startswith('discriminator')]
 G_vars = [var for var in T_vars if var.name.startswith('generator')]
 E_vars = [var for var in T_vars if var.name.startswith('encoder')]
 
+clip = [p.assign(tf.clip_by_value(p, -0.01, 0.01)) for p in D_vars]
+
 
 # optimizer for each network
 with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-    D_optim = tf.train.RMSPropOptimizer(lr).minimize(-D_loss, var_list=D_vars)
-    G_optim = tf.train.RMSPropOptimizer(lr).minimize(G_loss, var_list=G_vars)
-    E_optim = tf.train.RMSPropOptimizer(lr).minimize(VAE_loss, var_list=E_vars)
-    for var in D_vars:
-        tf.clip_by_value(var, -0.01, 0.01)
+    D_optim = tf.train.RMSPropOptimizer(D_lr).minimize(-D_loss, var_list=D_vars)
+    G_optim = tf.train.RMSPropOptimizer(G_lr).minimize(G_loss, var_list=G_vars)
+    E_optim = tf.train.AdamOptimizer(G_lr).minimize(VAE_loss, var_list=E_vars)
+    # E_optim = tf.train.RMSPropOptimizer(lr).minimize(VAE_loss, var_list=E_vars)
+
 
 # open session and initialize all variables
 sess = tf.InteractiveSession()
@@ -166,9 +170,11 @@ for batch in range(100):
     x_im, x_3d = dataset.get_batch(10)
     for _ in range(4):
         sess.run(D_optim, feed_dict={x_image: x_im, x_3D: x_3d, keep_prob: 0.8, isTrain: True})
+        sess.run(clip)
     loss_d_, loss_g_, _VAE_loss, _KL_divergence, _reconstruction_loss, summary, _, _, _ = \
         sess.run([D_loss, G_loss, VAE_loss, mean_KL, mean_recon, merged, D_optim, G_optim, E_optim],
                  {x_image: x_im, x_3D: x_3d, keep_prob: 0.8, isTrain: True})
+    sess.run(clip)
     print("D Loss:", loss_d_)
     print("G Loss:", loss_g_)
     print("VAE loss:", _VAE_loss)
@@ -176,3 +182,5 @@ for batch in range(100):
     print("reconstruction_loss:", _reconstruction_loss)
     print("###########")
 sess.close()
+
+
