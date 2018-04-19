@@ -9,3 +9,6 @@ Challenges of this project mainly come from two perspectives:
 3D objects.
 
 The goal of this project is to solve above challenges by creating a network that can not only synthesize 3D objects but also learn some latent representations from 2D images and reconstruct 3D objects base on them.
+
+Preliminary result:
+![alt text](https://raw.githubusercontent.com/Spartey/3D-VAE-GAN-Deep-Learning-Project/master/chair1.png)
