@@ -1,7 +1,7 @@
 # 3D-VAE-GAN-Deep-Learning-Project
 COMS 4995 Deep Learning Project, Spring 2018 - Gp6
 
-We implemented a 3D-VAE-GAN architecture for 3D object generation and classification. 
+We implemented a 3D-VAE-GAN architecture for 3D object generation and reconstruction. 
 
 Challenges of this project mainly come from two perspectives:
 1. The model needs to be able to generate 3D objects that are realistic as well as varied from the objects it has seen in the training phase; 
