@@ -3,7 +3,7 @@ import numpy as np
 import imageio
 import downSampling
 import binvox_rw
-
+import random
 
 class getData(object):
     def __init__(self, image_path, model_path):
@@ -19,6 +19,7 @@ class getData(object):
                 if ".DS_Store" not in f:
                     self.model_lst.append(f)
         self.fig_map = {}
+        random.shuffle(self.image_lst)
         for i in range(len(self.image_lst)):
             num = self.image_lst[i].split(".")[0].split("-")[0]
             self.fig_map[i] = self.model_lst.index(num + ".binvox")
@@ -31,12 +32,12 @@ class getData(object):
 
     def read_image(self, path):
         im = imageio.imread(path)
-        return ((np.reshape(downSampling.downsample(im, 8), (64, 64, 1)) / 255.0) - 0.5) / 0.5 # normalize -1 ~ 1
+        return ((np.reshape(downSampling.downsample(im, 8), (64, 64, 1)) / 255.0) - 0.5) / 0.5
 
     def read_3D(self, path):
         with open(path, 'rb') as f:
             m1 = binvox_rw.read_as_3d_array(f)
-        return (np.reshape(downSampling.downsample_cube(m1.data, 4), (32, 32, 32, 1)) - 0.5) / 0.5 # normalize -1 ~ 1
+        return (np.reshape(downSampling.downsample_cube(m1.data, 4), (32, 32, 32, 1)) - 0.5) / 0.5
 
     def get_batch(self, batch_size):
         if self.current_point + batch_size > len(self.image_lst):
@@ -45,12 +46,3 @@ class getData(object):
         x_3d = np.stack([self.model_array[self.fig_map[i]] for i in
                              range(self.current_point, self.current_point + batch_size)], axis=0)
         return x_image, x_3d
-
-
-# if __name__ == '__main__':
-#     image_path = "./grey-office-chair-image/"
-#     model_path = "./office-chair-model/"
-#     dataset = getTrain(image_path, model_path)
-#     xs, ys = dataset.get_batch(10)
-#     print(np.shape(xs))
-#     print(np.shape(ys))
